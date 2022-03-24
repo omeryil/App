@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - App</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">App</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Topic" asp-action="Index">Topics</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2022 - App - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        $(".btn").click(function() {
+           var dataId = $(this).attr("data-id");
+
+        if($("#".concat(dataId)).hasClass("collapse")) {
+            $("#".concat(dataId)).removeClass("collapse");
+        } else {
+            $("#".concat(dataId)).addClass("collapse");
+        }
+        
+    });
+    $(".form-check-input").change(function() {
+            var dataId = $(this).attr("data-id");
+            if(dataId!=null){
+                if(this.checked) {
+                    var cbs= $("input[data-id='" + dataId +"']");
+                    for(var i=0;i<cbs.length;++i){
+                        if(cbs[i]!=this){
+                            cbs[i].checked = false;
+                        }
+                    }
+                }
+            }
+        });
+    function postQuestion(i,len,id){
+        var ques=[]
+        var err="";
+        for(var c=0;c<len;++c){
+            var q="q_"+c.toString();
+            var qForm=document.querySelectorAll('[data-id="'+q+'"]');
+            var answerlist=[]
+            var answer="Answer_"+c.toString();
+            var correct="cb_"+c.toString();
+            var question="Question_"+c.toString();
+            var answers=qForm[i].querySelectorAll('[data-id="'+answer+'"]');
+            var corrects=qForm[i].querySelectorAll('[data-id="'+correct+'"]');
+            var questions=qForm[i].querySelectorAll('[data-id="'+question+'"]');
+            err="";
+            if(questions[0].value.toString().trim()===""){
+                err="Soruyu Boş Bırakma";
+            }
+            if(err!=""){
+                alert(err);
+                break;
+            }
+            for(var d=0;d<answers.length;++d){
+                if(answers[d].value.toString().trim()===""){
+                    err="Cevapları Boş Bırakma"
+                    break;
+                }else{
+                   answerlist.push({Answer:answers[d].value,Correct:corrects[d].checked});
+                }
+            }
+            if(err!=""){
+                alert(err);
+                break;
+            }
+            if(answerlist.filter(m => m.Correct==true).length<1){
+                alert("Doğru Cevap Seç")
+                break;
+            }
+            
+            ques.push({StoryID:id,Question:questions[0].value,Answer:answerlist});
+        }
+        if(err===""){
+            var dataToSend = {
+              frm: ques
+            };
+            $.ajax({
+              url: '/Home/Saveform',
+              type: 'POST',
+              dataType: 'html',
+              data: dataToSend,
+              success: function (response) {
+                  $("body").html(response);
+              }
+          });
+        }
+        return false;
+    }
+    function remove(id){
+         
+            $.ajax({
+              url: '/Topic/Remove/'+id,
+              type: 'POST',
+              contentType: "application/JSON;odata=verbose",
+              success: function (response) {
+                  $("body").html(response);
+              }
+          });
+          return false;
+    }
+    function selected(id,e){
+        var d=document.getElementById("list_".concat(id.toString()))
+        var btns=d.querySelectorAll('[data-type="answer"]');
+        for(var i=0;i<btns.length;++i){
+            var b= btns[i];
+            if(b!=e){
+                if(b.classList.contains("active")) {
+                    b.classList.remove("active");
+                }
+            }else{
+               b.classList.add("active");
+            }
+        }
+
+    }
+    function check(id){
+            var answerbtns=document.querySelectorAll('[data-type="answer"]');
+            var answers=[]
+            for(var i=0;i<answerbtns.length;++i){
+                if(answerbtns[i].classList.contains("active")){
+                    answers.push(answerbtns[i].getAttribute("data-value"))
+                }
+            }
+            if(answers.length<4){
+                alert("Lütfen Bütün Soruları Cevaplayın!")
+                return false;
+            }
+            var dataToSend = {
+              result:{ids: answers,id:id}
+            };
+            $.ajax({
+              url: '/Exam/Check',
+              type: 'POST',
+              dataType: "html",
+              data: dataToSend,
+              success: function (response) {
+                 $("body").html(response);
+              },
+              error: function (error) {
+                $("body").html(error.responseText);
+              }
+          });
+          return false;
+    }
+    </script>
+</body>
+</html>

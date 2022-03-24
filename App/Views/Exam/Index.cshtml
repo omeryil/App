@@ -1,0 +1,51 @@
+﻿@model ExamModel
+@{
+    ViewData["Title"] = "Exam";
+    string danger = "list-group-item list-group-item-action bg-danger";
+    string success = "list-group-item list-group-item-action bg-success";
+    string empty = "list-group-item list-group-item-action";
+}
+<div classd="row">
+    <div class="text-center">
+        <h3>@Model.Title</h3>
+    </div>
+    <div class="text-center">
+        <h4>@Model.Content</h4>
+    </div>
+    <div class="row">
+       @for (var i = 0; i < @Model.QuestionForms.Count; i++)
+       {
+            <div class="col-md-6">
+                <div class="m-2">@(i+1) ) @Model.QuestionForms[i].Question</div>
+                <form>
+                    <div class="list-group" id="list_@i">
+                        @foreach (var item in @Model.QuestionForms[i].Answer)
+                        {
+                            if (item.Correct.HasValue && (bool)item.Correct)
+                            {
+                                 <button type="button" onclick="selected(@i,this)" class="@success" data-type="answer" data-value=@item.ID>
+                                        @item.Answer
+                                </button>
+                            }else if(item.isSelected.HasValue && (bool)item.isSelected && !(bool)item.Correct)
+                            {
+                                 <button type="button" onclick="selected(@i,this)" class="@danger" data-type="answer" data-value=@item.ID>
+                                        @item.Answer
+                                </button>
+                            }
+                            else
+                                {
+                                    <button type="button" onclick="selected(@i,this)" class="@empty" data-type="answer" data-value=@item.ID>
+                                        @item.Answer
+                                    </button>
+                                }
+
+                       }
+                   </div>
+               </form>
+                <div></div>
+            </div>
+       }
+      
+   </div>  
+    <div class="col-md-12 text-center m-2"><button type="button" onclick="check(@Model.StoryID)">Cevapları Gönder</button></div>
+</div>
